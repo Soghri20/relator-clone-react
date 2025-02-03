@@ -2,6 +2,9 @@ import React, { useState } from 'react'
 import { FaEyeSlash, FaRegEye } from "react-icons/fa6";
 import { Link } from 'react-router';
 import OAuth from '../components/OAuth';
+import { supabase } from '../utils/supabase';
+import { useNavigate } from 'react-router';
+import { toast } from 'react-toastify';
 const SignUp = () => {
   const [formData,setFormData]=useState({
     fullName:'',
@@ -9,13 +12,74 @@ const SignUp = () => {
     password:''
   });
   const [showPassword,setShowPassword]=useState(false)
+  const [error,setError]=useState("")
+  const [loading,setLoading]=useState(false)
   const {email,password,fullName}=formData;
+  const navigate=useNavigate()
+
+  
   function onChange(e){
     setFormData((preState)=>({
       ...preState,
       [e.target.id]:e.target.value,
     }))
   }
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("")
+    
+    if (!email || !password) {
+       setError("Email and password are required.");
+       toast.error("Email and password are required.")
+
+       return;
+    }
+ 
+    setLoading(true);
+    try {
+      let { data, error } = await supabase.auth.signUp({ email, password });
+      setLoading(false);
+   
+      if (data) {
+         const user = data.user;
+         const copyFormData = {...formData,user_id:user?.id}
+         delete copyFormData.password;
+         try {
+
+          const { data, error } = await supabase
+             .from("users") // The table name is 'users'
+             .insert(copyFormData); // 'upsert' will add a new row or update it if the user already exists
+          if (error) {
+            toast.error(error.message)
+             throw new Error(error.message);
+
+          }
+ 
+         navigate("/")
+         toast.success("You re logged in !")
+       } catch (error) {
+          console.error("Error adding user to database:", error);
+          throw new Error("Error adding user to the database");
+       }
+      } else if (error) {
+         console.log('error',error.code);
+         if (error.code === 'auth/email-already-in-use') {
+            setError("This email is already registered.");
+            toast.error("This email is already registered.")
+         } else {
+            setError(error.message); // General error message
+         }
+      }
+    }catch(err){
+      console.error(err);
+      setError("An unexpected error occurred. Please try again.");
+      toast.error("An unexpected error occurred. Please try again.")
+   } finally {
+      setLoading(false);
+   }
+   
+ };
+ 
   return (
     <section>
       <h1 className='text-center text-3xl font-bold mt-6'>Sign In</h1>
@@ -24,7 +88,7 @@ const SignUp = () => {
           <img className='rounded-lg w-full' src="https://plus.unsplash.com/premium_photo-1693842703126-6337dd42bf32?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="" />
         </div>
         <div className='w-full md:w-[67%] lg:w-[40%] lg:ml-20'>
-          <form >
+          <form onSubmit={handleSubmit} >
           <input  className=" w-full mt-4 md:mt-6 lg:mt-0 form-input rounded text-xl bg-white text-gray-700 px-4 py-3 transistion ease-in-out border-gray-300" type='text' id='fullName' 
             value={fullName} onChange={onChange} placeholder='Full Name' />
             <input  className=" w-full mt-3  form-input rounded text-xl bg-white text-gray-700 px-4 py-3 transistion ease-in-out border-gray-300" type='email' id='email' 
