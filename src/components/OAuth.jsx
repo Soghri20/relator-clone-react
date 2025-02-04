@@ -12,7 +12,7 @@ const OAuth = () => {
 
     try {
       // Trigger Google login with a popup
-      const { user, session, error } = await supabase.auth.signInWithOAuth({
+      const { user, error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: "http://localhost:3000/profile", // Optional: You can specify a redirect URL here.
