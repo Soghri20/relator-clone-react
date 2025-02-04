@@ -1,14 +1,16 @@
 import React, { useState } from 'react'
 import { FaEyeSlash, FaRegEye } from "react-icons/fa6";
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import OAuth from '../components/OAuth';
 import { supabase } from '../utils/supabase';
+import { toast } from 'react-toastify';
 
 const SignIn = () => {
   const [formData,setFormData]=useState({
     email:'',
     password:''
   });
+  const navigate=useNavigate()
   const [showPassword,setShowPassword]=useState(false)
   const {email,password}=formData;
   function onChange(e){
@@ -19,7 +21,20 @@ const SignIn = () => {
   }
   const onSubmit = async (e)=>{
     e.preventDefault()
-   
+   try{
+       let { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if(error){
+        toast.error('bad request')
+        return 
+      }else{
+        console.log(data.user)
+        navigate('/')
+        
+      }
+    
+   }catch(error){
+    console.log(error)
+   }
 
 
   }

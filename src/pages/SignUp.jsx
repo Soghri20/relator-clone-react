@@ -12,8 +12,9 @@ const SignUp = () => {
     password:''
   });
   const [showPassword,setShowPassword]=useState(false)
-  const [error,setError]=useState("")
+  const [error,setError]=useState(null)
   const [loading,setLoading]=useState(false)
+  const [existedUser,setExistedUser]=useState(false)
   const {email,password,fullName}=formData;
   const navigate=useNavigate()
 
@@ -24,61 +25,141 @@ const SignUp = () => {
       [e.target.id]:e.target.value,
     }))
   }
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError("")
-    
-    if (!email || !password) {
-       setError("Email and password are required.");
-       toast.error("Email and password are required.")
-
-       return;
-    }
+  
  
-    setLoading(true);
+
+  const checkTheUser = async (email) => {
     try {
-      let { data, error } = await supabase.auth.signUp({ email, password });
-      setLoading(false);
+        // Call the custom Supabase RPC function to check if the email exists
+        const { data, error } = await supabase.rpc('check_email_exists', { input_email: email });
+
+        if (error) {
+            console.error("Error checking email:", error);
+            toast.error("There was an error checking the email. Please try again.");
+            return;  // Early exit if there's an error
+        }
+
+        // Check the result from the Supabase function (true or false)
+        if (data) {
+            // Email exists, show error message
+            toast.error("This email already exists. Please use a different one.");
+            setExistedUser(true);  // Set state to true (email exists)
+        } else {
+            // Email does not exist, user can proceed
+            setExistedUser(false);  // Set state to false (email is available)
+        }
+
+    } catch (err) {
+        console.error("Unexpected error:", err);
+        toast.error("An unexpected error occurred. Please try again later.");
+    }
+};
+
+ // Simple email regex to check for valid email format
+const isValidEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+const isValidPassword = (password) => {
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+{}[\]:;"'<>,.?/~\\|-]).{8,}$/;
+  return passwordRegex.test(password);
+};
+
+
+ const handleSignUp = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError(null);
+
+  if(email === '' || password === ''|| !isValidEmail(email)){
+    toast.error('please enter valid email and password')
+    setLoading(false)
+    return
+  }else if(!isValidPassword(password)){
+    toast.error('Password must be at least 8 characters long, contain at least one letter, one number, and one special character.')
+    setLoading(false)
+    return
+  }
+  //checkTheUser(email)
+  
+  
+    try {
+       const { data, error } = await supabase.auth.signUp({
+         email,
+         password,
+       });
    
-      if (data) {
-         const user = data.user;
-         const copyFormData = {...formData,user_id:user?.id}
-         delete copyFormData.password;
-         try {
-
-          const { data, error } = await supabase
-             .from("users") // The table name is 'users'
-             .insert(copyFormData); // 'upsert' will add a new row or update it if the user already exists
-          if (error) {
-            toast.error(error.message)
-             throw new Error(error.message);
-
-          }
- 
-         navigate("/")
-         toast.success("You re logged in !")
-       } catch (error) {
-          console.error("Error adding user to database:", error);
-          throw new Error("Error adding user to the database");
+       if (error) {
+         handleError(error);
+         setLoading(false);
+         return;
+       }else if(data){
+         const person = data?.user;
+            const copyFormData = {...formData,user_id:person?.id}
+            delete copyFormData.password;
+            try {
+   
+             const { data, error } = await supabase
+                .from("users") // The table name is 'users'
+                .insert(copyFormData); // 'upsert' will add a new row or update it if the user already exists
+             if (error) {
+               toast.error(error.message)
+                throw new Error(error.message);
+   
+             }
+             
+    
+            navigate("/")
+            toast.success("You re logged in !")
+           
+       }catch(error){
+   
        }
-      } else if (error) {
-         console.log('error',error.code);
-         if (error.code === 'auth/email-already-in-use') {
-            setError("This email is already registered.");
-            toast.error("This email is already registered.")
-         } else {
-            setError(error.message); // General error message
-         }
-      }
-    }catch(err){
-      console.error(err);
-      setError("An unexpected error occurred. Please try again.");
-      toast.error("An unexpected error occurred. Please try again.")
-   } finally {
-      setLoading(false);
-   }
+     }
    
- };
+       setLoading(false);
+     } catch (error) {
+       setError({
+         message: error.message,
+         code: error.code || "UNKNOWN_ERROR",
+       });
+       setLoading(false);
+     }
+
+
+ 
+};
+const handleError = (error) => {
+  let errorMessage = "";
+
+  switch (error.code) {
+    case "auth/invalid-email":
+      errorMessage = "The email address is not valid. Please enter a valid email.";
+      break;
+    case "auth/email-already-exists":
+      errorMessage = "The email address is already registered. Please log in or use a different email.";
+      break;
+    case "auth/invalid-credentials":
+      errorMessage = "Incorrect email or password. Please try again.";
+      break;
+    case "auth/weak-password":
+      errorMessage = "Your password is too weak. Please choose a stronger password.";
+      break;
+    case "auth/user-not-found":
+      errorMessage = "No user found with this email. Please sign up first.";
+      break;
+    default:
+      errorMessage = "An unexpected error occurred. Please try again.";
+      break;
+  }
+
+  setError({
+    message: errorMessage,
+    code: error.code,
+  });
+  
+  toast.error(error.message)
+};
  
   return (
     <section>
@@ -88,7 +169,7 @@ const SignUp = () => {
           <img className='rounded-lg w-full' src="https://plus.unsplash.com/premium_photo-1693842703126-6337dd42bf32?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="" />
         </div>
         <div className='w-full md:w-[67%] lg:w-[40%] lg:ml-20'>
-          <form onSubmit={handleSubmit} >
+          <form onSubmit={handleSignUp} >
           <input  className=" w-full mt-4 md:mt-6 lg:mt-0 form-input rounded text-xl bg-white text-gray-700 px-4 py-3 transistion ease-in-out border-gray-300" type='text' id='fullName' 
             value={fullName} onChange={onChange} placeholder='Full Name' />
             <input  className=" w-full mt-3  form-input rounded text-xl bg-white text-gray-700 px-4 py-3 transistion ease-in-out border-gray-300" type='email' id='email' 

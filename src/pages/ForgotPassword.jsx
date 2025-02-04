@@ -2,9 +2,28 @@ import React, { useState } from 'react'
 import { FaEyeSlash, FaRegEye } from "react-icons/fa6";
 import { Link } from 'react-router';
 import OAuth from '../components/OAuth';
+import { toast } from 'react-toastify';
+import { supabase } from '../utils/supabase';
 
 const ForgotPassword = () => {
 const [email,setEmail]=useState('')
+const onSubmit= async (e) =>{
+
+  e.preventDefault()
+  try{
+     let { data, error } = await supabase.auth.resetPasswordForEmail(email)
+     if(error){
+      console.log(error)
+      return 
+     }else{
+      toast.success('go check your email')
+     }
+
+  }catch(error){
+    toast.error('could not send reset password')
+  }
+}
+
   return (
     <section>
       <h1 className='text-center text-3xl font-bold mt-6'>Sign In</h1>
@@ -13,7 +32,7 @@ const [email,setEmail]=useState('')
           <img className='rounded-lg w-full' src="https://plus.unsplash.com/premium_photo-1693842703126-6337dd42bf32?q=80&w=1074&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="" />
         </div>
         <div className='w-full md:w-[67%] lg:w-[40%] lg:ml-20'>
-          <form >
+          <form onSubmit={onSubmit}>
             <input  className=" w-full mt-4 md:mt-6 lg:mt-0 form-input rounded text-xl bg-white text-gray-700 px-4 py-3 transistion ease-in-out border-gray-300" type='email' id='email' 
             value={email} onChange={(e)=>setEmail(e.target.value)} placeholder='Email Adress' />
             
