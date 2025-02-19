@@ -6,6 +6,7 @@ import { supabase } from '../utils/supabase';
 const OAuth = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
   const onGoogleClick = async () => {
     setLoading(true);
     setError(null);
@@ -26,10 +27,10 @@ const OAuth = () => {
       }
 
       console.log("Redirecting to Google login...");
-      setLoading(user)
+      setLoading(false)
 
       // If you need to handle user session immediately, you can use the following
-      // await handleRedirect();
+       await handleRedirect();
 
     } catch (error) {
       setError(error.message);
@@ -39,7 +40,7 @@ const OAuth = () => {
   useEffect(()=>{
     handleRedirect()
 
-  },[loading])
+  },[])
 
   // Function to handle the user after redirect (called after user is redirected back)
   const handleRedirect = async () => {

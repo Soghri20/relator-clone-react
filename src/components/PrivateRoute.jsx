@@ -6,7 +6,6 @@ import useAuthStatus from '../hooks/useAuthStatus'
 const PrivateRoute = () => {
     const {usering,loading} = useAuthStatus()
     const navigate=useNavigate()
-    console.log(usering)
     if (loading) {
         return <div>Loading...</div>;
       }
