@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { supabase } from '../utils/supabase';
 import { toast } from 'react-toastify';
 import useAuthStatus from '../hooks/useAuthStatus';
+import { FcHome } from "react-icons/fc";
+
 
 function Profile() {
   const [isCompleted, setIsCompleted] = useState(true);
@@ -169,6 +171,12 @@ function Profile() {
             </p>
           </div>
         </form>
+        <button type='submit' className='w-full bg-blue-600 text-white uppercase px-7 py-3 text-sm font-medium rounded shadow-md hover hover:bg-blue-700 transition duration-150 ease-in-out hover:shadow-lg active:bg-blue-800'>
+          <Link to='/create-listing' className='flex justify-center items-center'>
+             <FcHome className='mr-2 text-3xl bg-red-200 rounded-full p-1 border-2'/>
+             Sell or Rent your home 
+          </Link>
+        </button>
       </div>
     </section>
   );

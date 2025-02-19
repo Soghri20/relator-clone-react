@@ -8,6 +8,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import Navbar from "./components/Navbar";
 import { ToastContainer } from "react-toastify";
 import PrivateRoute from "./components/PrivateRoute";
+import CreatingListing from "./pages/CreatingListing";
 
 function App() {
   return (
@@ -21,6 +22,9 @@ function App() {
         <Route path='/offers' element={<Offers />} />
         <Route path='/profile' element={<PrivateRoute />}>
            <Route path="/profile" element={<Profile />} />
+        </Route>
+        <Route path='/create-listing' element={<PrivateRoute />}>
+           <Route path="/create-listing" element={<CreatingListing />} />
         </Route>
         <Route path='/forgot-password' element={<ForgotPassword/>} />
       </Routes>
