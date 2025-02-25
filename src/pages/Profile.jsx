@@ -4,12 +4,15 @@ import { supabase } from '../utils/supabase';
 import { toast } from 'react-toastify';
 import useAuthStatus from '../hooks/useAuthStatus';
 import { FcHome } from "react-icons/fc";
+import Spinner from '../components/Spinner';
+import ListingItem from '../components/ListingItem';
 
 
 function Profile() {
   const [isCompleted, setIsCompleted] = useState(true);
   const [loader,setLoader]=useState(false)
   const [changeDetail, setChangeDetail] = useState(false);
+  const [listings,setListings]=useState([])
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -39,7 +42,7 @@ function Profile() {
       toast.error('Please fill in both fields');
       return;
     }
-    const fullNameCopy='zakaria'
+    
     try {
       // Check if the user exists in the database
       const { data, error } = await supabase
@@ -116,6 +119,7 @@ function Profile() {
           fullName:users[0]?.fullName,
           email:users[0]?.email
         })
+       fetchUserListing()
        setLoader(false)
        
       };
@@ -125,11 +129,26 @@ function Profile() {
     }
   }, [usering, loading]);
  
-  
+   
+   const fetchUserListing = async ()=>{
 
-  if (loading && loader) return 'loading...';
+    try{
+      console.log('here',usering.id)
+      let { data, error } = await supabase.from('listings').select('*').eq('user_id',usering?.id);
+      if(error) throw error
+
+      setListings(data)
+      
+
+    }catch(error){
+      console.log(error)
+    } 
+  }
+  console.log(listings)
+  if (loading && loader) return <Spinner />;
 
   return (
+    <>
     <section className="max-w-6xl mx-auto flex justify-center items-center flex-col">
       <h1 className="text-3xl text-center mt-6 font-bold">My Profile</h1>
       <div className="w-full md:w-[50%] mt-6 px-3">
@@ -179,6 +198,19 @@ function Profile() {
         </button>
       </div>
     </section>
+    <div className='max-w-6xl px-3 mt-6 mx-auto'>
+      {!loading && listings.length >0 &&(
+        <>
+         <h2 className='text-2xl text-center font-semibold'>My listings</h2>
+         <ul>
+          {listings.map((listing)=>{
+           return  <ListingItem key={listing.id} listing={listing}/>
+          })}
+         </ul>
+        </>
+      )}
+    </div>
+    </>
   );
 }
 

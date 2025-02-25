@@ -26,7 +26,7 @@ const CreatingListing = () => {
     const [loading, setLoading] = useState(false);
     const { usering } = useAuthStatus();
     const { type, name, bedrooms, bathrooms, parking, furnished, address, offer, description, regularPrice, discountedPrice, images } = formData;
-
+    console.log(usering)
     // Handle form input changes
     const onChange = (e) => {
         let boolean = null;
@@ -107,6 +107,7 @@ const CreatingListing = () => {
             const formDataCopy = {
                 ...formData,
                 uploadedImageUrls,
+                user_id :usering?.id
             }
             delete formDataCopy.images
             !formData.offer && delete formDataCopy.discountedPrice
