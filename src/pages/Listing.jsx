@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router'
 import { supabase } from '../utils/supabase'
 import Spinner from '../components/Spinner'
-import { Swiper, SwiperSlide } from 'swiper/react';
+import { Swiper, SwiperSlide } from 'swiper/react'
+import { FaRegShareSquare } from "react-icons/fa";
+
 import '../../src/index.css'
 import 'swiper/css'; // Basic styles
 import 'swiper/css/navigation'; // Navigation styles
@@ -13,6 +15,7 @@ const Listing = () => {
     const params = useParams()
     const [listing,setListing]=useState(null)
     const [loading,setLoading]=useState(false)
+    const [shareLinkCopied,setShareLinkCopied]=useState(false)
     const listingId = params.listingId
     useEffect(()=>{
         console.log(params)
@@ -56,6 +59,18 @@ const Listing = () => {
                        </SwiperSlide>
             })}
         </Swiper>
+        <div className='fixed top-[13%] right-[3%] z-10 bg-white cursor-pointer border-gray-400 rounded-full w-12 h-12
+        flex justify-center items-center' onClick={()=>{
+            navigator.clipboard.writeText(window.location.href)
+            setShareLinkCopied(true)
+            setTimeout(()=>{
+                setShareLinkCopied(false)
+            },2000)
+        }}>
+            
+         <FaRegShareSquare className='text-lg text-slate-500' />
+         {shareLinkCopied && <p className='fixed top-[23%] right-[5%] font-semibold border-2 border-gray-400 rounded-md bg-white z-10 p-2'>Link Copied !</p> }
+        </div>
     </main>
   )
 }
