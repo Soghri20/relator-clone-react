@@ -2,9 +2,13 @@ import React from 'react'
 import Moment from 'react-moment'
 import { Link } from 'react-router'
 import { MdLocationOn } from "react-icons/md";
+import { FaTrash } from "react-icons/fa";
+import { MdEditSquare } from "react-icons/md";
 
 
-const ListingItem = ({listing}) => {
+
+
+const ListingItem = ({listing,onDelete,onEdit}) => {
     console.log(typeof  new Date(listing.created_at))
   return (
     <li className='relative bg-white flex flex-col justify-between items-center shadow-md hover:shadow-xl rounded-md overflow-hidden rounded-md transition-shadow duration-150 m-[10px]'>
@@ -55,6 +59,14 @@ const ListingItem = ({listing}) => {
           </div>
         </div>
       </Link>
+      {onDelete && (
+        <FaTrash  className='absolute bottom-1 right-2 h-[40px] cursor-pointer text-red-500'
+        onClick={()=>onDelete(listing.id)}/>
+      )}
+      {onEdit && (
+        <MdEditSquare className='absolute bottom-1 right-9 h-[39px] text-xl cursor-pointer '
+        onClick={()=>onEdit(listing.id)}/>
+      )}
     </li>
   )
 }

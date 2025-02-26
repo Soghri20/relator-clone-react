@@ -144,7 +144,23 @@ function Profile() {
       console.log(error)
     } 
   }
-  console.log(listings)
+  async function onDelete(listingId) {
+    if(window.confirm('are you sure you want to delete?')){
+      const { error } = await supabase.from('listings').delete()
+       .eq('id', listingId)
+       if(!error){
+        toast.success('the list has been deleted successfully')
+        console.log(listings)
+        const newListing =  listings.filter(listing =>listing?.id !== listingId)
+        setListings(newListing)
+       }
+    }
+
+  }
+  function onEdit (lisitingID) {
+    navigate(`/edit-listing/${lisitingID}`)
+
+  }
   if (loading && loader) return <Spinner />;
 
   return (
@@ -204,7 +220,9 @@ function Profile() {
          <h2 className='text-2xl text-center font-semibold'>My listings</h2>
          <ul className='sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl-grid-cols-5 mt-6 mb-6' >
           {listings.map((listing)=>{
-           return  <ListingItem   key={listing.id} listing={listing}/>
+           return  <ListingItem   key={listing.id} listing={listing}
+           onDelete={()=>onDelete(listing.id)}
+           onEdit={()=>onEdit(listing.id)}/>
           })}
          </ul>
         </>
