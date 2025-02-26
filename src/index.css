@@ -5,3 +5,11 @@
 body{
     background-color:#AAF ;
 }
+
+.swiper-button-next ::after,
+.swiper-button-prev ::after{
+    color: #AAF !important;
+}
+.swipper-pagination-progressbar .swipper-pagination-progressbar-fill{
+    background: #AAF !important;
+}
