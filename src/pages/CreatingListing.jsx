@@ -7,7 +7,7 @@ import { supabase } from '../utils/supabase';
 import { useNavigate } from 'react-router';
 
 const CreatingListing = () => {
-    const [geolocationEnabled, setGeolocationEnabled] = useState(true);
+    const [geolocationEnabled, setGeolocationEnabled] = useState(null);
     const navigate = useNavigate()
     const [formData, setFormData] = useState({
         type: 'rent',
@@ -26,7 +26,7 @@ const CreatingListing = () => {
     const [loading, setLoading] = useState(false);
     const { usering } = useAuthStatus();
     const { type, name, bedrooms, bathrooms, parking, furnished, address, offer, description, regularPrice, discountedPrice, images } = formData;
-    console.log(usering)
+    
     // Handle form input changes
     const onChange = (e) => {
         let boolean = null;
@@ -68,10 +68,24 @@ const CreatingListing = () => {
         const publicUrl = publicURLData.publicUrl;
 
         if (urlError) throw urlError;
-      
-
+    
          return publicUrl;
     };
+    // give the latt and longtt for exact position
+    const fetchCoordinates = async (address) => {
+
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
+        );
+        const data = await response.json();
+        if (data.length > 0) {
+          setGeolocationEnabled({ lat: data[0].lat, lon: data[0].lon})
+          console.log(typeof geolocationEnabled.lat)
+          return { lat: data[0].lat, lon: data[0].lon };
+        }
+        return null;
+      };
+      
     // 
     const onSubmit = async (e) => {
         e.preventDefault();
@@ -101,14 +115,21 @@ const CreatingListing = () => {
 
             // Store the uploaded URLs
             uploadedImageUrls.push(...imageResults);
-            console.log(uploadedImageUrls)
+           
+
 
            // If everything is successful, update the formData state with the image URLs
+           fetchCoordinates(formData.address)
+           console.log(geolocationEnabled)
             const formDataCopy = {
                 ...formData,
                 uploadedImageUrls,
-                user_id :usering?.id
+                user_id :usering?.id,
+                lattitude : geolocationEnabled.lat,
+                longtittude : geolocationEnabled.lon
+                
             }
+            console.log(formDataCopy)
             delete formDataCopy.images
             !formData.offer && delete formDataCopy.discountedPrice
             const {data ,error} =await supabase.from('listings')
@@ -117,7 +138,6 @@ const CreatingListing = () => {
            // Perform the logic to save the listing (store the rest of the form data as needed)
 
             toast.success('Listing created successfully!');
-            console.log(data)
             navigate(`/category/${formDataCopy.type}/${data?.[0]?.id}`)
 
         } catch (error) {

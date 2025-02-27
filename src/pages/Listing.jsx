@@ -14,35 +14,42 @@ import 'swiper/css/pagination'; // Pagination styles
 import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import useAuthStatus from '../hooks/useAuthStatus'
 import Contact from '../components/Contact'
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet'
 
 const Listing = () => {
     const params = useParams()
     const {usering} = useAuthStatus()
     const [listing,setListing]=useState(null)
+    const [testing,setTesting]=useState([])
     const [loading,setLoading]=useState(false)
     const [contactLandlord,setContactLandlord]=useState(false)
     const [shareLinkCopied,setShareLinkCopied]=useState(false)
     const listingId = params.listingId
-    useEffect(()=>{
-        console.log(params)
-        async function fetchListing(){
-            try{
-                setLoading(true)
-                const {data,error} =await supabase.from('listings')
-                .select('*').eq('id',listingId).single()
-                if(error) throw error
-                setListing(data)
-                console.log('here',data.uploadedImageUrls)
-            }catch(err){
-                console.err('error fetching listing =>',err)
-            }finally{
-                setLoading(false)
+    useEffect(() => {
+        async function fetchListing() {
+            try {
+                setLoading(true);
+                const { data, error } = await supabase
+                    .from('listings')
+                    .select('*')
+                    .eq('id', listingId)
+                    .single();
+    
+                if (error) return console.error(error);
+                if (data) {
+                    console.log('Fetched Data:', data); // Check if data is correct
+                    setListing(data);
+                    setTesting(data);
+                }
+            } catch (err) {
+                console.error('Error fetching listing =>', err);
+            } finally {
+                setLoading(false);
             }
         }
-       if(listingId) fetchListing()
-        console.log(listing)
-    },[listingId])
-    console.log(listing?.user_id!==usering?.id)
+        fetchListing();
+    }, [listingId]);
+  
 
   if(loading) return <Spinner />
 
@@ -114,6 +121,8 @@ const Listing = () => {
                         <FaChair className='text-lg mr-1' />
                         {listing?.furnished  ? `Furnished` : 'No Furnished'}
                     </li>
+
+                    
                 </ul>
                 {listing?.user_id !== usering?.id  && !contactLandlord && 
                 <div className='mt-6'>
@@ -127,8 +136,25 @@ const Listing = () => {
                  )}
                 
             </div>
-            <div className='bg-pink-700 w-full h-[200px] lg-[400px] z-10 overflow-x-hidden'>
-
+            <div className=' w-full h-[200px] md:h-[600px] mt-6 md:ml-2 md:mt-0 z-10 overflow-x-hidden'>
+            {listing?.lattitude && listing?.longtittude ? (
+    <MapContainer
+      center={[listing?.lattitude,listing?.longtittude ]}
+      zoom={13}
+      scrollWheelZoom={false}
+      style={{height:'100%',width:'100%'}}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      <Marker position={[listing?.lattitude,listing?.longtittude ]}>
+        <Popup>A pretty CSS3 popup. <br /> Easily customizable.</Popup>
+      </Marker>
+    </MapContainer>
+  ) : (
+    <p className="text-center text-red-500">Location not available</p>
+  )}
             </div>
         </div>
     </main>
